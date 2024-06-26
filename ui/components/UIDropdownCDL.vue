@@ -14,7 +14,7 @@
             variant="outlined"
             v-model="value"
             hide-details
-            :options="options"
+            :items="props.options"
             :bg-color="color"
             :disabled="disabled"
             >
@@ -41,10 +41,7 @@ export default {
     },
     data () {
         return {
-            properties: {},
-            label: "Select",
             value: "",
-            options: [],
             color: "",
             disabled: false,
             class: "",
@@ -105,6 +102,26 @@ export default {
         processMsg: function(msg) {
             // ...
         },
+    },
+    watch: {
+        value: function () {
+            console.log(`In watch value ${JSON.stringify(this.value)}`)
+            let msg = {}
+            msg.payload = this.value
+            this.$socket.emit('widget-change', this.id, msg) // send the message and save in data store
+            // the value has changed, is this as a result of an incoming message?
+            /*
+            if (this.msg.payload !== this.value) {
+                // No, so must be a manual operation, not from a message.
+                // include this in the sent message so that if the page is refreshed (which resends the last in or out message) we will know
+                this.state.fromManual = true
+                this.msg.payload = this.value
+                this.msg.topic = this._data.topic
+                this.msg._data.state = this.state
+                this.send(this.msg)
+            }
+            */
+        }
     },
 }
 </script>

@@ -42,12 +42,13 @@
             let optionsList = $("#node-input-options-container")
             optionsList.editableList({
                 addItem: function(container, i, option) {
-                    //console.log(`Adding: ${JSON.stringify(option)}`)
-                    let newAddition = false   // whether this is as a result of Add button being hit
-                    if (!option.hasOwnProperty("value")) {
+                    console.log(`Adding: ${JSON.stringify(option)}, typeof: ${typeof option}`)
+                    let newAddition = false   // whether this is as a result of Add button being hit (an empty object)
+                    if (typeof option !== "string") {
                         // this is a new option
+                        console.log("New")
                         newAddition = true
-                        option = {value: ""}
+                        option = ""
                     }
                     let row =  $('<div/>', {
                         class: 'form-row',
@@ -63,7 +64,7 @@
                         class: 'node-input-option-value-value'
                     }).appendTo(row)
                     console.log(`option: ${JSON.stringify(option)}`)
-                    valueField.val(option.value)
+                    valueField.val(option)
 
                     // watch for changes on the start field
                     valueField.on("change keyup paste", function() {
@@ -89,9 +90,7 @@
             var node = this;
             node.options = [];
             options.each(function(i) {
-                node.options.push({
-                    value: $(this).find('.node-input-option-value-value').val(),
-                })
+                node.options.push( $(this).find('.node-input-option-value-value').val() )
             });
             console.log(`oneditsave options: ${JSON.stringify(node.options)}`)
         },

@@ -10,7 +10,7 @@ module.exports = function (RED) {
         const base = group.getBase()
 
         // initialise data store on startup or deploy
-        base.stores.data.save(base, node, {label: "init label"})
+        base.stores.data.save(base, node, {})
 
         // server-side event handlers
         const evts = {

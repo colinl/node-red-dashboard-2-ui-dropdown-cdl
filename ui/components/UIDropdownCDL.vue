@@ -58,7 +58,7 @@ export default {
         this.$socket.on('widget-load:' + this.id, (msg) => {
             // load the latest message from the Node-RED datastore when this widget is loaded
             // storing it in our vuex store so that we have it saved as we navigate around
-            console.log(`On widget-load ${JSON.stringify(msg)}`)
+            //console.log(`On widget-load ${JSON.stringify(msg)}`)
             this.processMsg(msg)     // pick up message values
             /*
             havent worked out how to use this yet
@@ -69,7 +69,7 @@ export default {
             */
         })
         this.$socket.on('msg-input:' + this.id, (msg) => {
-            console.log(`Message received: ${JSON.stringify(msg)}`)
+            //console.log(`Message received: ${JSON.stringify(msg)}`)
             // new message received
             this.processMsg(msg)
 
@@ -82,7 +82,7 @@ export default {
             */
         })
 
-        console.log(`mounted, props: ${JSON.stringify(this.props)}`)
+        //console.log(`mounted, props: ${JSON.stringify(this.props)}`)
         // pickup node properties to local data
         this.pickupProperties()
         // tell Node-RED that we're loading a new instance of this widget
@@ -108,6 +108,10 @@ export default {
                     // set flag to indicate that we have changed it via a message
                     this.valueFromMsg = true
                 }
+            }
+            // check whether msg.enabled is present
+            if ("enabled" in msg) {
+                this.disabled = !msg.enabled
             }
         },
     },

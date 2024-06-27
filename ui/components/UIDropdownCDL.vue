@@ -38,13 +38,21 @@ export default {
     data () {
         return {
             value: "",
-            color: "",
             disabled: false,
+            fromManual: false, // indicates that the current state is from a manual click
             class: "",
         }
     },
     computed: {
         ...mapState('data', ['messages']),
+
+        color: function() {
+            let answer = ""
+            if (this.fromManual) {
+                answer = this.props.waitingcolor ?? ""
+            }
+            return answer
+        }
     },
     mounted () {
         this.$socket.on('widget-load:' + this.id, (msg) => {
@@ -92,11 +100,14 @@ export default {
         },
         processMsg: function(msg) {
             // if msg.payload is present then it has already been validated in the server
-            //console.log(`processMsg payload: ${msg.payload}, value: ${this.value}`)
-            if (msg.payload && msg.payload !== this.value) {
-                this.value = msg.payload
-                // set flag to indicate that we have changed it via a message
-                this.valueFromMsg = true
+            if (msg.payload) {
+                // clear flag indicating that current state is from a manual click
+                this.fromManual = false
+                if (msg.payload !== this.value) {
+                    this.value = msg.payload
+                    // set flag to indicate that we have changed it via a message
+                    this.valueFromMsg = true
+                }
             }
         },
     },
@@ -110,9 +121,11 @@ export default {
             } else {
                 //console.log(`manual op`)
                 // Not set, so must be a manual operation, not from a message.
+                // set flag to say the current state if from a manual operation
+                this.fromManual = true
                 let msg1 = {}
                 msg1.payload = this.value
-                //msg.topic = this._data.topic
+                msg1.topic = this.props.topic
                 this.$socket.emit('widget-action', this.id, msg1) // send the message without saving in data store
             }
         }

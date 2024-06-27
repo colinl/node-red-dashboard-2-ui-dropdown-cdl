@@ -22,6 +22,8 @@
             options: {
                 value: [], // array of option strings
             },
+            topic: { value: ""},
+            waitingcolor: {value: ""},
             myclass: {value: ""},
         },
         inputs: 1,
@@ -119,6 +121,14 @@
     <div class="form-row node-input-options-container-row">
       <label><i class="fa fa-list"></i> Options</label>
       <ol id="node-input-options-container"></ol>
+    </div>
+    <div class="form-row">
+        <label for="node-input-topic"><i class="fa fa-tag"></i> Topic</label>
+        <input type="text" id="node-input-topic">
+    </div>
+    <div class="form-row">
+        <label for="node-input-waitingcolor"><i class="fa fa-tag"></i> Waiting Colour</label>
+        <input type="text" id="node-input-waitingcolor">
     </div>
 </script>
 

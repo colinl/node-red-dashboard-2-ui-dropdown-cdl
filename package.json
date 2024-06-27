@@ -1,7 +1,7 @@
 {
     "name": "@colinl/node-red-dashboard-2-ui-dropdown-cdl",
-    "version": "0.0.0",
-    "description": "A ui node for @flowfuse/node-red-dashboard",
+    "version": "0.1.0",
+    "description": "A ui dropdown node with colour feedback for @flowfuse/node-red-dashboard",
     "keywords": [
         "node-red",
         "node-red-dashboard-2"
@@ -16,8 +16,6 @@
         "url": "https://github/colinl"
     },
     "contributors": [
-        {
-        }
     ],
     "exports": {
         "import": "./resources/ui-dropdown-cdl.esm.js",

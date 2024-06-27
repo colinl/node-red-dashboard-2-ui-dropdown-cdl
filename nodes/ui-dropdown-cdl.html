@@ -23,7 +23,7 @@
                 value: [], // array of option strings
             },
             topic: { value: ""},
-            waitingcolor: {value: ""},
+            waitingcolor: {value: "red-lighten-5"},
             myclass: {value: ""},
         },
         inputs: 1,
@@ -44,11 +44,9 @@
             let optionsList = $("#node-input-options-container")
             optionsList.editableList({
                 addItem: function(container, i, option) {
-                    console.log(`Adding: ${JSON.stringify(option)}, typeof: ${typeof option}`)
                     let newAddition = false   // whether this is as a result of Add button being hit (an empty object)
                     if (typeof option !== "string") {
                         // this is a new option
-                        console.log("New")
                         newAddition = true
                         option = ""
                     }
@@ -65,7 +63,6 @@
                         style: 'margin-left: 5px; margin-bottom: 0;',
                         class: 'node-input-option-value-value'
                     }).appendTo(row)
-                    console.log(`option: ${JSON.stringify(option)}`)
                     valueField.val(option)
 
                     // watch for changes on the start field
@@ -82,7 +79,6 @@
                 addButton: 'add option',
             })
             this.options = this.options || []
-            //console.log(`About to add items: ${JSON.stringify(this.options)}`)
             optionsList.editableList('addItems', this.options)
 
 
@@ -94,7 +90,6 @@
             options.each(function(i) {
                 node.options.push( $(this).find('.node-input-option-value-value').val() )
             });
-            console.log(`oneditsave options: ${JSON.stringify(node.options)}`)
         },
     })
 </script>

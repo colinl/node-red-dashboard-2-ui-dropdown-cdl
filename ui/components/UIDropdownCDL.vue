@@ -4,10 +4,6 @@
 <template>
     <!-- Component must be wrapped in a block so props such as className and style can be passed in from parent -->
     <div className="ui-dropdown-cdl-wrapper" :class="class">
-        <div>ID: {{ id }}</div>
-    <div>Name: {{ props.name }}</div>
-    <div>Group: {{ props.group }}</div>
-    <div>label: {{ props.label }}</div>
         <v-select
             :label="props.label"
 
@@ -36,7 +32,7 @@ export default {
         state: { type: Object, default: () => ({ enabled: false, visible: false }) }
     },
     setup (props) {
-        console.info('_nodeName_ setup with:', props)
+        //console.info('_nodeName_ setup with:', props)
         //console.debug('Vue function loaded correctly', markRaw)
     },
     data () {
@@ -93,34 +89,32 @@ export default {
         pickupProperties: function() {
             // pickup node properties from this.props and merge with base properties
             //const props = this.props
-            //this.properties = JSON.parse(JSON.stringify(this.props))
-            console.log(`props: ${JSON.stringify(this.props)}`)
-            //this.label = `test ${props.label}`
-            //console.log(`this.label: ${this.label}`)
-            // ...
         },
         processMsg: function(msg) {
-            // ...
+            // if msg.payload is present then it has already been validated in the server
+            //console.log(`processMsg payload: ${msg.payload}, value: ${this.value}`)
+            if (msg.payload && msg.payload !== this.value) {
+                this.value = msg.payload
+                // set flag to indicate that we have changed it via a message
+                this.valueFromMsg = true
+            }
         },
     },
     watch: {
         value: function () {
-            console.log(`In watch value ${JSON.stringify(this.value)}`)
-            let msg = {}
-            msg.payload = this.value
-            this.$socket.emit('widget-change', this.id, msg) // send the message and save in data store
-            // the value has changed, is this as a result of an incoming message?
-            /*
-            if (this.msg.payload !== this.value) {
-                // No, so must be a manual operation, not from a message.
-                // include this in the sent message so that if the page is refreshed (which resends the last in or out message) we will know
-                this.state.fromManual = true
-                this.msg.payload = this.value
-                this.msg.topic = this._data.topic
-                this.msg._data.state = this.state
-                this.send(this.msg)
+            //console.log(`In watch value ${JSON.stringify(this.value)}, valueFromMsg: ${this.valueFromMsg}`)
+            // this.valueFromMsg indicates whether the value change was from a message, in which case we
+            // don't need to send a message
+            if (this.valueFromMsg) {
+                this.valueFromMsg = false
+            } else {
+                //console.log(`manual op`)
+                // Not set, so must be a manual operation, not from a message.
+                let msg1 = {}
+                msg1.payload = this.value
+                //msg.topic = this._data.topic
+                this.$socket.emit('widget-action', this.id, msg1) // send the message without saving in data store
             }
-            */
         }
     },
 }

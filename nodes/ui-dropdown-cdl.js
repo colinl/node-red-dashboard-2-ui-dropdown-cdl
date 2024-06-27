@@ -28,10 +28,18 @@ module.exports = function (RED) {
                     storedData.ui_update = {...storedData.ui_update, ...msg.ui_update}
                 }
 
+                // is msg.payload a valid selection?
+                if ((typeof msg.payload === "string") && config.options.includes(msg.payload)) {
+                    console.log(`storing payload ${msg.payload}`)
+                    storedData.payload = msg.payload
+                } else {
+                    // otherwise remove msg.payload so the clients do not action it
+                    delete msg.payload
+                }
+
                 // store the latest value in our Node-RED datastore
                 base.stores.data.save(base, node, storedData)
-                // send msg with any properties to be updated to any connected nodes in Node-RED
-                send(msg)
+                // don't call send(msg) as we don't want to pass the message on to connected nodes
             },
             onSocket: {
                 /*

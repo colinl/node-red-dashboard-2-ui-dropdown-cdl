@@ -1,6 +1,6 @@
 {
     "name": "@colinl/node-red-dashboard-2-ui-dropdown-cdl",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "A ui dropdown node with colour feedback for @flowfuse/node-red-dashboard",
     "keywords": [
         "node-red",

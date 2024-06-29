@@ -31,6 +31,8 @@ module.exports = function (RED) {
                 // is msg.payload a valid selection?
                 if ((typeof msg.payload === "string") && config.options.includes(msg.payload)) {
                     storedData.payload = msg.payload
+                    // also store the topic in this case, for the case where configured topic is blank
+                    storedData.topic = msg.topic
                 } else {
                     // otherwise remove msg.payload so the clients do not action it
                     delete msg.payload

@@ -40,6 +40,7 @@ export default {
             value: "",
             disabled: false,
             fromManual: false, // indicates that the current state is from a manual click
+            topic: null,
             class: "",
         }
     },
@@ -96,7 +97,9 @@ export default {
     methods: {
         pickupProperties: function() {
             // pickup node properties from this.props and merge with base properties
-            //const props = this.props
+            const props = this.props
+            this.topic = props.topic // pickup topic from properties
+
         },
         processMsg: function(msg) {
             // if msg.payload is present then it has already been validated in the server
@@ -107,6 +110,10 @@ export default {
                     this.value = msg.payload
                     // set flag to indicate that we have changed it via a message
                     this.valueFromMsg = true
+                }
+                // pickup topic from msg if not configured
+                if (!this.props.topic || this.props.topic.length === 0) {
+                    this.topic = msg.topic
                 }
             }
             // check whether msg.enabled is present
@@ -129,7 +136,7 @@ export default {
                 this.fromManual = true
                 let msg1 = {}
                 msg1.payload = this.value
-                msg1.topic = this.props.topic
+                msg1.topic = this.topic
                 this.$socket.emit('widget-action', this.id, msg1) // send the message without saving in data store
             }
         }

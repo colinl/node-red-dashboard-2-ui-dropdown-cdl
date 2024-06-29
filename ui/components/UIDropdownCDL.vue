@@ -7,7 +7,7 @@
         <v-select
             :label="props.label"
 
-            variant="outlined"
+            variant="underlined"
             v-model="value"
             hide-details
             :items="props.options.map((option) => option.label)"

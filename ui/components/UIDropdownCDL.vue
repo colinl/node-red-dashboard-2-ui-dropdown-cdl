@@ -83,7 +83,7 @@ export default {
             */
         })
 
-        console.log(`mounted, props: ${JSON.stringify(this.props)}`)
+        //console.log(`mounted, props: ${JSON.stringify(this.props)}`)
         // pickup node properties to local data
         this.pickupProperties()
         // tell Node-RED that we're loading a new instance of this widget
@@ -101,7 +101,6 @@ export default {
             this.topic = props.topic // pickup topic from properties
             // fill in option labels if not provided
             props.options.forEach((option) => option.label = option.label.length>0 ? option.label : option.value)
-            console.log(`after pickupProperites: ${JSON.stringify(props.options)}`)
         },
         processMsg: function(msg) {
             // if msg.payload is present then it has already been validated in the server
@@ -128,7 +127,6 @@ export default {
     },
     watch: {
         value: function () {
-            console.log(`value change: ${this.value}` )
             //console.log(`In watch value ${JSON.stringify(this.value)}, valueFromMsg: ${this.valueFromMsg}`)
             // this.valueFromMsg indicates whether the value change was from a message, in which case we
             // don't need to send a message

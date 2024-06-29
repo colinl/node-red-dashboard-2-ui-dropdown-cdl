@@ -28,7 +28,7 @@
         },
         inputs: 1,
         outputs: 1,
-        icon: "font-awesome/fa-dashboard",  // "fa-dashboard",
+        icon: "font-awesome/fa-list",
         paletteLabel: "ui-dropdown-cdl",
         label: function() {
             return this.name || "ui-dropdown-cdl";
@@ -44,7 +44,7 @@
             let optionsList = $("#node-input-options-container")
             optionsList.editableList({
                 addItem: function(container, i, option) {
-                    console.log(`adding: ${JSON.stringify(option)}`)
+                    //console.log(`adding: ${JSON.stringify(option)}`)
                     let newAddition = false   // whether this is as a result of Add button being hit (an empty object)
                     if (!option.hasOwnProperty("value")) {
                         // this is a new option
@@ -81,17 +81,6 @@
                 addButton: 'add option',
             })
             this.options = this.options || []
-            // temporary code to cope with old nodes
-            console.log(`incoming options: ${JSON.stringify(this.options)}`)
-            this.options = this.options.map((option) => {
-                console.log(`typeof option: ${typeof option}`)
-                if (typeof option === "string") {
-                    console.log(`mapping`)
-                    option = {value: option, label: ""}
-                }
-                return option
-            })
-            console.log(`mapped options: ${JSON.stringify(this.options)}`)
             optionsList.editableList('addItems', this.options)
 
 

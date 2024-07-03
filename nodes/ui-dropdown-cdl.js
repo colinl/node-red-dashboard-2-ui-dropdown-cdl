@@ -22,14 +22,16 @@ module.exports = function (RED) {
 
                 // does msg.ui_update exist and is an object?
                 if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
-                    // yes it does
+                    // yes it does, do any pre-processing required of the contents
+                    msg.ui_update = handleSpecialPropertyUpdate(msg.ui_update)
                     storedData.ui_update ??= {}    // initialise if necessary
                     // merge in data from this message
                     storedData.ui_update = {...storedData.ui_update, ...msg.ui_update}
                 }
 
-                // is msg.payload a valid selection?
-                if (typeof msg.payload === "string" && config.options.find((option) => option.value === msg.payload)) {
+                // is msg.payload a valid selection in the current options (from config or ui_update)?
+                const theOptions = storedData.ui_update?.options ? storedData.ui_update.options : config.options
+                if (typeof msg.payload === "string" && theOptions.find((option) => option.value === msg.payload)) {
                     storedData.payload = msg.payload
                     // also store the topic in this case, for the case where configured topic is blank
                     storedData.topic = msg.topic
@@ -68,6 +70,33 @@ module.exports = function (RED) {
         } else {
             node.error('No group configured')
         }
+    }
+
+    function handleSpecialPropertyUpdate(ui_update) {
+        // given a msg.ui_update object this massages any properties that need special handling
+        if (ui_update.options) {
+            // this may be an array of strings, an array of objects containing {value: "value"} or
+            // an array of objects containing {value: "value", label: "label"}
+            // Note that they must all be strings
+            if (!Array.isArray(ui_update.options)) {
+                console.error("msg.ui_update.options is not an array")
+            } else {
+                ui_update.options = ui_update.options.map((option) => {
+                    let answer;
+                    if (typeof option === "string") {
+                        answer = {value: option, label: option}
+                    } else {
+                        answer = option
+                        // fill in the labels if not provided
+                        if (!answer.label || answer.label.length == 0) {
+                            answer.label = answer.value
+                        }
+                    }
+                    return answer
+                })
+            }
+        }
+        return ui_update
     }
 
     RED.nodes.registerType('ui-dropdown-cdl', UIDropdownCDLNode)

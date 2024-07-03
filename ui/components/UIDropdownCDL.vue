@@ -10,7 +10,7 @@
             variant="outlined"
             v-model="value"
             hide-details
-            :items="props.options.map((option) => option.label)"
+            :items="options"
             :bg-color="color"
             :disabled="disabled"
             >
@@ -41,6 +41,7 @@ export default {
             disabled: false,
             fromManual: false, // indicates that the current state is from a manual click
             topic: null,
+            ui_update: {},
             class: "",
         }
     },
@@ -53,6 +54,11 @@ export default {
                 answer = this.props.waitingcolor ?? ""
             }
             return answer
+        },
+        options: function() {
+            // return the labels from ui_update.options if present, otherwise the original options from props.options
+            const theOptions = this.ui_update.options ? this.ui_update.options : this.props.options
+            return theOptions.map((option) => option.label)
         }
     },
     mounted () {
@@ -70,7 +76,7 @@ export default {
             */
         })
         this.$socket.on('msg-input:' + this.id, (msg) => {
-            //console.log(`Message received: ${JSON.stringify(msg)}`)
+            //console.log(`On msg-input: ${JSON.stringify(msg)}`)
             // new message received
             this.processMsg(msg)
 
@@ -108,7 +114,8 @@ export default {
                 // clear flag indicating that current state is from a manual click
                 this.fromManual = false
                 // string in msg.payload matches a value in this.proc.options, find equivalent label
-                const label = this.props.options.find((option) => option.value === msg.payload)?.label
+                const theOptions = this.ui_update.options ? this.ui_update.options : this.props.options
+                const label = theOptions.find((option) => option.value === msg.payload)?.label
                 if (label !== this.value) {
                     this.value = label
                     // set flag to indicate that we have changed it via a message
@@ -118,6 +125,12 @@ export default {
                 if (!this.props.topic || this.props.topic.length === 0) {
                     this.topic = msg.topic
                 }
+            }
+            // check whether msg.ui_update is present and is an object
+            if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
+                //merge in data from this message
+                this.ui_update = {...this.ui_update, ...msg.ui_update}
+                //console.log(`ui_update: ${JSON.stringify(this.ui_update)}`)
             }
             // check whether msg.enabled is present
             if ("enabled" in msg) {
@@ -138,7 +151,9 @@ export default {
                 // set flag to say the current state if from a manual operation
                 this.fromManual = true
                 let msg1 = {}
-                msg1.payload = this.props.options.find((option) => option.label === this.value)?.value
+                // return the value from ui_update.options if present, otherwise from the original options from props.options
+                const theOptions = this.ui_update.options ? this.ui_update.options : this.props.options
+                msg1.payload = theOptions.find((option) => option.label === this.value)?.value
                 msg1.topic = this.topic
                 this.$socket.emit('widget-action', this.id, msg1) // send the message without saving in data store
             }

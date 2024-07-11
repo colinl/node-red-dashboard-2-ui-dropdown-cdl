@@ -109,6 +109,18 @@ export default {
             props.options.forEach((option) => option.label = option.label.length>0 ? option.label : option.value)
         },
         processMsg: function(msg) {
+            // pickup config data first as it may affect the meaning of msg.payload
+            // check whether msg.ui_update is present and is an object
+            if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
+                //merge in data from this message
+                this.ui_update = {...this.ui_update, ...msg.ui_update}
+                //console.log(`ui_update: ${JSON.stringify(this.ui_update)}`)
+            }
+            // check whether msg.enabled is present
+            if ("enabled" in msg) {
+                // update our local copy of props
+                this.props.enabled = msg.enabled
+            }
             // if msg.payload is present then it has already been validated in the server
             if (msg.payload) {
                 // clear flag indicating that current state is from a manual click
@@ -125,17 +137,6 @@ export default {
                 if (!this.props.topic || this.props.topic.length === 0) {
                     this.topic = msg.topic
                 }
-            }
-            // check whether msg.ui_update is present and is an object
-            if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
-                //merge in data from this message
-                this.ui_update = {...this.ui_update, ...msg.ui_update}
-                //console.log(`ui_update: ${JSON.stringify(this.ui_update)}`)
-            }
-            // check whether msg.enabled is present
-            if ("enabled" in msg) {
-                // update our local copy of props
-                this.props.enabled = msg.enabled
             }
         },
     },

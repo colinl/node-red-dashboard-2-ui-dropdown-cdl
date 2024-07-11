@@ -12,7 +12,7 @@
             hide-details
             :items="options"
             :bg-color="color"
-            :disabled="disabled"
+            :disabled="!props.enabled"
             >
         </v-select>
     </div>
@@ -32,7 +32,7 @@ export default {
         state: { type: Object, default: () => ({ enabled: false, visible: false }) }
     },
     setup (props) {
-        //console.info('_nodeName_ setup with:', props)
+        //console.info('UIDropdownCDL setup with:', props)
         //console.debug('Vue function loaded correctly', markRaw)
     },
     data () {
@@ -134,7 +134,8 @@ export default {
             }
             // check whether msg.enabled is present
             if ("enabled" in msg) {
-                this.disabled = !msg.enabled
+                // update our local copy of props
+                this.props.enabled = msg.enabled
             }
         },
     },

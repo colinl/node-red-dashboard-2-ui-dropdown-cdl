@@ -40,10 +40,7 @@ module.exports = function (RED) {
                     delete msg.payload
                 }
 
-                // check whether msg.enabled is present
-                if ("enabled" in msg) {
-                    storedData.enabled = msg.enabled
-                }
+                // msg.enabled is handled by the core code, updating the value in props when necessary
 
                 // store the latest values in our Node-RED datastore
                 base.stores.data.save(base, node, storedData)

@@ -38,10 +38,7 @@ export default {
     data () {
         return {
             value: "",
-            disabled: false,
             fromManual: false, // indicates that the current state is from a manual click
-            topic: null,
-            ui_update: {},
             class: "",
         }
     },
@@ -56,9 +53,8 @@ export default {
             return answer
         },
         options: function() {
-            // return the labels from ui_update.options if present, otherwise the original options from props.options
-            const theOptions = this.ui_update.options ? this.ui_update.options : this.props.options
-            return theOptions.map((option) => option.label)
+            // return the labels from props.options
+            return this.props.options.map((option) => option.label)
         }
     },
     mounted () {
@@ -67,26 +63,11 @@ export default {
             // storing it in our vuex store so that we have it saved as we navigate around
             //console.log(`On widget-load ${JSON.stringify(msg)}`)
             this.processMsg(msg)     // pick up message values
-            /*
-            havent worked out how to use this yet
-            this.$store.commit('data/bind', {
-                widgetId: this.id,
-                msg
-            })
-            */
         })
         this.$socket.on('msg-input:' + this.id, (msg) => {
             //console.log(`On msg-input: ${JSON.stringify(msg)}`)
             // new message received
             this.processMsg(msg)
-
-            // store the latest message in our client-side vuex store when we receive a new message
-            /*
-            this.$store.commit('data/bind', {
-                widgetId: this.id,
-                msg
-            })
-            */
         })
 
         //console.log(`mounted, props: ${JSON.stringify(this.props)}`)
@@ -112,30 +93,31 @@ export default {
             // pickup config data first as it may affect the meaning of msg.payload
             // check whether msg.ui_update is present and is an object
             if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
-                //merge in data from this message
-                this.ui_update = {...this.ui_update, ...msg.ui_update}
-                //console.log(`ui_update: ${JSON.stringify(this.ui_update)}`)
+                // update properties from ui_update object
+                for (const [key, value] of Object.entries(msg.ui_update)) {
+                        this.props[key] = value
+                }
             }
             // check whether msg.enabled is present
             if ("enabled" in msg) {
                 // update our local copy of props
                 this.props.enabled = msg.enabled
             }
-            // if msg.payload is present then it has already been validated in the server
-            if (msg.payload) {
+            // check whether msg.topic is present
+            if ("topic" in msg) {
+                // yes, save in topicUpdated in props
+                this.props.topicUpdated = msg.topic
+            }
+            // check whether msg.payload is present and is one of the options
+            if (typeof msg.payload === "string" && this.props.options.find((option) => option.value === msg.payload)) {
                 // clear flag indicating that current state is from a manual click
                 this.fromManual = false
                 // string in msg.payload matches a value in this.proc.options, find equivalent label
-                const theOptions = this.ui_update.options ? this.ui_update.options : this.props.options
-                const label = theOptions.find((option) => option.value === msg.payload)?.label
+                const label = this.props.options.find((option) => option.value === msg.payload)?.label
                 if (label !== this.value) {
                     this.value = label
                     // set flag to indicate that we have changed it via a message
                     this.valueFromMsg = true
-                }
-                // pickup topic from msg if not configured
-                if (!this.props.topic || this.props.topic.length === 0) {
-                    this.topic = msg.topic
                 }
             }
         },
@@ -153,10 +135,14 @@ export default {
                 // set flag to say the current state if from a manual operation
                 this.fromManual = true
                 let msg1 = {}
-                // return the value from ui_update.options if present, otherwise from the original options from props.options
-                const theOptions = this.ui_update.options ? this.ui_update.options : this.props.options
-                msg1.payload = theOptions.find((option) => option.label === this.value)?.value
-                msg1.topic = this.topic
+                // return the value for the matching label
+                msg1.payload = this.props.options.find((option) => option.label === this.value)?.value
+                // set topic to configured one if not empty, otherwise the topic from last valid message
+                if (this.props.topic && this.props.topic.length > 0) {
+                    msg1.topic = this.topic
+                } else {
+                    msg1.topic = this.props.topicUpdated
+                }
                 this.$socket.emit('widget-action', this.id, msg1) // send the message without saving in data store
             }
         }

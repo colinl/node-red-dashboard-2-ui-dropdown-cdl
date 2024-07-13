@@ -16,34 +16,31 @@ module.exports = function (RED) {
         const evts = {
             onAction: true,
             onInput: function (msg, send, done) {
-                // pick up existing stored data
-                let storedData = base.stores.data.get(node.id)
-                //console.log(`onInput storedData: ${JSON.stringify(storedData)}\n\n`)
-
                 // does msg.ui_update exist and is an object?
                 if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
                     // yes it does, do any pre-processing required of the contents
                     msg.ui_update = handleSpecialPropertyUpdate(msg.ui_update)
-                    storedData.ui_update ??= {}    // initialise if necessary
-                    // merge in data from this message
-                    storedData.ui_update = {...storedData.ui_update, ...msg.ui_update}
+                    // merge data into the properties in the state store
+                    let statestore = base.stores.state
+                    for (const [key, value] of Object.entries(msg.ui_update)) {
+                        statestore.set(base, node, msg, key, value)
+                    }
                 }
-
-                // is msg.payload a valid selection in the current options (from config or ui_update)?
-                const theOptions = storedData.ui_update?.options ? storedData.ui_update.options : config.options
-                if (typeof msg.payload === "string" && theOptions.find((option) => option.value === msg.payload)) {
-                    storedData.payload = msg.payload
-                    // also store the topic in this case, for the case where configured topic is blank
-                    storedData.topic = msg.topic
+                // if msg.topic exists then save that as a new property, as need to be able to check if configured
+                // topic is empty, but only do it if msg.payload is present
+                if ("topic" in msg  &&  "payload" in msg) {
+                    base.stores.state.set(base, node, msg, "topicUpdated", msg.topic)
                 } else {
-                    // otherwise remove msg.payload so the clients do not action it
-                    delete msg.payload
+                    // otherwise remove the topic if present
+                    delete msg.topic
                 }
-
                 // msg.enabled is handled by the core code, updating the value in props when necessary
 
-                // store the latest values in our Node-RED datastore
-                base.stores.data.save(base, node, storedData)
+                // oonly store the message in our Node-RED datastore if payload is present, so that
+                // the last selection will get replayed on refresh
+                if ("payload" in msg) {
+                    base.stores.data.save(base, node, msg)
+                }
                 // don't call send(msg) as we don't want to pass the message on to connected nodes
             },
             onSocket: {

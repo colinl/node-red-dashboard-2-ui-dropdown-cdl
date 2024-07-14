@@ -3,7 +3,7 @@
 -->
 <template>
     <!-- Component must be wrapped in a block so props such as className and style can be passed in from parent -->
-    <div className="ui-dropdown-cdl-wrapper" :class="class">
+    <div className="ui-dropdown-cdl-wrapper" :class="props.class" >
         <v-select
             :label="props.label"
 
@@ -22,6 +22,8 @@
 //import { markRaw } from 'vue'
 import { mapState } from 'vuex'
 
+const logEvents = false  // whether to log incoming messages and events
+
 export default {
     name: 'UIDropdownCDL',
     inject: ['$socket'],
@@ -39,7 +41,6 @@ export default {
         return {
             value: "",
             fromManual: false, // indicates that the current state is from a manual click
-            class: "",
         }
     },
     computed: {
@@ -61,16 +62,16 @@ export default {
         this.$socket.on('widget-load:' + this.id, (msg) => {
             // load the latest message from the Node-RED datastore when this widget is loaded
             // storing it in our vuex store so that we have it saved as we navigate around
-            //console.log(`On widget-load ${JSON.stringify(msg)}`)
+            if (logEvents) console.log(`On widget-load ${JSON.stringify(msg)}`)
             this.processMsg(msg)     // pick up message values
         })
         this.$socket.on('msg-input:' + this.id, (msg) => {
-            //console.log(`On msg-input: ${JSON.stringify(msg)}`)
+            if (logEvents) console.log(`On msg-input: ${JSON.stringify(msg)}`)
             // new message received
             this.processMsg(msg)
         })
 
-        //console.log(`mounted, props: ${JSON.stringify(this.props)}`)
+        if (logEvents) console.log(`mounted, props: ${JSON.stringify(this.props)}`)
         // pickup node properties to local data
         this.pickupProperties()
         // tell Node-RED that we're loading a new instance of this widget
@@ -93,10 +94,18 @@ export default {
             // pickup config data first as it may affect the meaning of msg.payload
             // check whether msg.ui_update is present and is an object
             if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
-                // update properties from ui_update object
+                // array of properties to allow ui_update for. Need to include class so it updates dynamically
+                const propertiesToUpdate = ["options","class"]
                 for (const [key, value] of Object.entries(msg.ui_update)) {
+                    if (propertiesToUpdate.includes(key)) {
                         this.props[key] = value
+                    }
                 }
+            }
+            // check whether msg.class is present
+            if ("class" in msg) {
+                // update our local copy of props
+                this.props.class = msg.class
             }
             // check whether msg.enabled is present
             if ("enabled" in msg) {

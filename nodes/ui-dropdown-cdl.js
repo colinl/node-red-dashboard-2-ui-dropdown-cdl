@@ -18,12 +18,16 @@ module.exports = function (RED) {
             onInput: function (msg, send, done) {
                 // does msg.ui_update exist and is an object?
                 if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
+                    // array of properties to allow ui_update for. No need to include class or className, they are handled automatically
+                    const propertiesToUpdate = ["options"]
                     // yes it does, do any pre-processing required of the contents
                     msg.ui_update = handleSpecialPropertyUpdate(msg.ui_update)
                     // merge data into the properties in the state store
                     let statestore = base.stores.state
                     for (const [key, value] of Object.entries(msg.ui_update)) {
-                        statestore.set(base, node, msg, key, value)
+                        if (propertiesToUpdate.includes(key)) {
+                            statestore.set(base, node, msg, key, value)
+                        }
                     }
                 }
                 // if msg.topic exists then save that as a new property, as need to be able to check if configured

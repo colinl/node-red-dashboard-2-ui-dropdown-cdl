@@ -20,7 +20,7 @@
 
 <script>
 //import { markRaw } from 'vue'
-import { mapState } from 'vuex'
+//import { mapState } from 'vuex'
 
 const logEvents = false  // whether to log incoming messages and events
 
@@ -43,25 +43,8 @@ export default {
             fromManual: false, // indicates that the current state is from a manual click
         }
     },
-    computed: {
-        ...mapState('data', ['messages']),
-
-        color: function() {
-            let answer = ""
-            if (this.fromManual) {
-                answer = this.props.waitingcolor ?? ""
-            }
-            return answer
-        },
-        options: function() {
-            // return the labels from props.options
-            return this.props.options.map((option) => option.label)
-        }
-    },
     mounted () {
         this.$socket.on('widget-load:' + this.id, (msg) => {
-            // load the latest message from the Node-RED datastore when this widget is loaded
-            // storing it in our vuex store so that we have it saved as we navigate around
             if (logEvents) console.log(`On widget-load ${JSON.stringify(msg)}`)
             this.processMsg(msg)     // pick up message values
         })
@@ -81,6 +64,21 @@ export default {
         /* Make sure, any events you subscribe to on SocketIO are unsubscribed to here */
         this.$socket?.off('widget-load:' + this.id)
         this.$socket?.off('msg-input:' + this.id)
+    },
+    computed: {
+        //...mapState('data', ['messages']),
+
+        color: function() {
+            let answer = ""
+            if (this.fromManual) {
+                answer = this.props.waitingcolor ?? ""
+            }
+            return answer
+        },
+        options: function() {
+            // return the labels from props.options
+            return this.props.options.map((option) => option.label)
+        }
     },
     methods: {
         pickupProperties: function() {

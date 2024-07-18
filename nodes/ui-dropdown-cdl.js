@@ -9,9 +9,6 @@ module.exports = function (RED) {
 
         const base = group.getBase()
 
-        // initialise data store on startup or deploy
-        base.stores.data.save(base, node, {})
-
         // server-side event handlers
         const evts = {
             onAction: true,
@@ -40,7 +37,7 @@ module.exports = function (RED) {
                 }
                 // msg.enabled is handled by the core code, updating the value in props when necessary
 
-                // oonly store the message in our Node-RED datastore if payload is present, so that
+                // only store the message in our Node-RED datastore if payload is present, so that
                 // the last selection will get replayed on refresh
                 if ("payload" in msg) {
                     base.stores.data.save(base, node, msg)

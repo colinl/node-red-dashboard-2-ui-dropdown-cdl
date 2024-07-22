@@ -50,8 +50,12 @@ export default {
         })
         this.$socket.on('msg-input:' + this.id, (msg) => {
             if (logEvents) console.log(`On msg-input: ${JSON.stringify(msg)}`)
-            // new message received
-            this.processMsg(msg)
+            // new message received, process it depending on whether it is an updates message or a normal message
+            if (msg._updates) {
+                this.processUpdates(msg._updates)
+            } else {
+                this.processMsg(msg)
+            }
         })
 
         if (logEvents) console.log(`mounted, props: ${JSON.stringify(this.props)}`)
@@ -66,8 +70,6 @@ export default {
         this.$socket?.off('msg-input:' + this.id)
     },
     computed: {
-        //...mapState('data', ['messages']),
-
         color: function() {
             let answer = ""
             if (this.fromManual) {
@@ -89,32 +91,6 @@ export default {
             props.options.forEach((option) => option.label = option.label.length>0 ? option.label : option.value)
         },
         processMsg: function(msg) {
-            // pickup config data first as it may affect the meaning of msg.payload
-            // check whether msg.ui_update is present and is an object
-            if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
-                // array of properties to allow ui_update for. Need to include class so it updates dynamically
-                const propertiesToUpdate = ["options","class"]
-                for (const [key, value] of Object.entries(msg.ui_update)) {
-                    if (propertiesToUpdate.includes(key)) {
-                        this.props[key] = value
-                    }
-                }
-            }
-            // check whether msg.class is present
-            if ("class" in msg) {
-                // update our local copy of props
-                this.props.class = msg.class
-            }
-            // check whether msg.enabled is present
-            if ("enabled" in msg) {
-                // update our local copy of props
-                this.props.enabled = msg.enabled
-            }
-            // check whether msg.topic is present
-            if ("topic" in msg) {
-                // yes, save in topicUpdated in props
-                this.props.topicUpdated = msg.topic
-            }
             // check whether msg.payload is present and is one of the options
             if (typeof msg.payload === "string" && this.props.options.find((option) => option.value === msg.payload)) {
                 // clear flag indicating that current state is from a manual click
@@ -126,6 +102,15 @@ export default {
                     // set flag to indicate that we have changed it via a message
                     this.valueFromMsg = true
                 }
+            }
+        },
+        /** given an object containing properties to be updated
+         * updates this.props with the new values
+         * any validation required should have been done in the server
+         */
+        processUpdates: function(updates) {
+            for (const [key, value] of Object.entries(updates)) {
+                this.props[key] = value
             }
         },
     },

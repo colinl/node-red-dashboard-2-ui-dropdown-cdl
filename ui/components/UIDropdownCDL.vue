@@ -50,12 +50,13 @@ export default {
         })
         this.$socket.on('msg-input:' + this.id, (msg) => {
             if (logEvents) console.log(`On msg-input: ${JSON.stringify(msg)}`)
-            // new message received, process it depending on whether it is an updates message or a normal message
-            if (msg._updates) {
-                this.processUpdates(msg._updates)
-            } else {
-                this.processMsg(msg)
-            }
+            // new message received
+            this.processMsg(msg)
+        })
+        this.$socket.on('widget-updates:' + this.id, (msg) => {
+            if (logEvents) console.log(`On widget-updates: ${JSON.stringify(msg)}`)
+            // updates received
+            this.processUpdates(msg._updates)
         })
 
         if (logEvents) console.log(`mounted, props: ${JSON.stringify(this.props)}`)
@@ -68,6 +69,7 @@ export default {
         /* Make sure, any events you subscribe to on SocketIO are unsubscribed to here */
         this.$socket?.off('widget-load:' + this.id)
         this.$socket?.off('msg-input:' + this.id)
+        this.$socket?.off('widget-updates:' + this.id)
     },
     computed: {
         color: function() {

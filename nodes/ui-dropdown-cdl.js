@@ -70,16 +70,15 @@ module.exports = function (RED) {
                 return
             },
             onSocket: {
-                /*
-                'my-custom-event': function (conn, id, msg) {
-                    console.info('"my-custom-event" received:', conn.id, id, msg)
-                    console.info('conn.id:', conn.id)
-                    console.info('id:', id)
-                    console.info('msg:', msg)
-                    console.info('node.id:', node.id)
-                    // emit a msg in Node-RED from this node
-                    node.send(msg)
-                }
+                /* this is an example of how to implement a custom event message from the client
+                'update-statestore': function(conn, id, msg) {
+                    //console.info(`update-statestore received from node ${id} by ${node.id} containing`, msg)
+                    // check if this is from my node
+                    if (id === node.id) {
+                        console.info(`update-statestore received from node ${id} by ${node.id} containing`, msg)
+                    }
+                    // can use node.send() here if need to send a message to connected nodes
+                },
                 */
             }
         }

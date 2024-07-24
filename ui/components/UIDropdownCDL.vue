@@ -45,21 +45,21 @@ export default {
     },
     mounted () {
         this.$socket.on('widget-load:' + this.id, (msg) => {
-            if (logEvents) console.log(`On widget-load ${JSON.stringify(msg)}`)
+            if (logEvents) console.log(`On widget-load id: ${this.id}`, msg)
             this.processMsg(msg)     // pick up message values
         })
         this.$socket.on('msg-input:' + this.id, (msg) => {
-            if (logEvents) console.log(`On msg-input: ${JSON.stringify(msg)}`)
+            if (logEvents) console.log(`On msg-input id: ${this.id}`, msg)
             // new message received
             this.processMsg(msg)
         })
         this.$socket.on('widget-updates:' + this.id, (msg) => {
-            if (logEvents) console.log(`On widget-updates: ${JSON.stringify(msg)}`)
+            if (logEvents) console.log(`On widget-updates id: ${this.id}`,msg)
             // updates received
             this.processUpdates(msg._updates)
         })
 
-        if (logEvents) console.log(`mounted, props: ${JSON.stringify(this.props)}`)
+        if (logEvents) console.log(`mounted id: ${this.id}\nprops: ${JSON.stringify(this.props)}\nstate: ${JSON.stringify(this.state)}`)
         // pickup node properties to local data
         this.pickupProperties()
         // tell Node-RED that we're loading a new instance of this widget
@@ -137,7 +137,15 @@ export default {
                 } else {
                     msg1.topic = this.props.topicUpdated
                 }
-                this.$socket.emit('widget-action', this.id, msg1) // send the message without saving in data store
+                // if required send a message to a custom event in the server to update the state store, for example
+                /*
+                const data = {id: this.id, timestamp: new Date().toISOString()}
+                console.log(`sending message to server from ${this.id} containing`, data)
+                this.$socket.emit('update-statestore', this.id, data)
+                */
+
+                // send the message to connected nodes without saving in data store
+                this.$socket.emit('widget-action', this.id, msg1)
             }
         }
     },

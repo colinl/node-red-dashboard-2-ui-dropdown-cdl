@@ -46,7 +46,8 @@ export default {
     mounted () {
         this.$socket.on('widget-load:' + this.id, (msg) => {
             if (logEvents) console.log(`On widget-load id: ${this.id}`, msg)
-            this.processMsg(msg)     // pick up message values
+            // msg will be null if no message has been sent to the node yet
+            if (msg) this.processMsg(msg)     // pick up message values
         })
         this.$socket.on('msg-input:' + this.id, (msg) => {
             if (logEvents) console.log(`On msg-input id: ${this.id}`, msg)

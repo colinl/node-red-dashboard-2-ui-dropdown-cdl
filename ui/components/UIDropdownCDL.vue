@@ -144,14 +144,16 @@ export default {
         */
         onDynamicProperties (msg) {
             // handle any dynamic properties that are sent from Node-RED
+            console.log(`In onDynamicProperties, options: ${JSON.stringify(this.getProperty("options"))}`)
             const updates = msg.ui_update
             if (!updates) {
                 return
             }
-            if (typeof updates.example !== 'undefined') {
+            if (typeof updates.options !== 'undefined') {
                 // use the globally available "setDynamicProperties" function to store any updates to this property
-                this.setDynamicProperties({ example: updates.example })
+                this.setDynamicProperties({ options: updates.options })
             }
+            console.log(`leaving onDynamicProperties, options: ${JSON.stringify(this.getProperty("options"))}`)
         },
         alert (text) {
             alert(text)

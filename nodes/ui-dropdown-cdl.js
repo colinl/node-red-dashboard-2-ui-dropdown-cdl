@@ -31,6 +31,7 @@ module.exports = function (RED) {
                                 // null means that there is a problem with the data so ignore it.
                                 updatesPresent = true
                                 updates[key] = val
+                                msg.ui_update[key] = val
                             }
                         }
                     }

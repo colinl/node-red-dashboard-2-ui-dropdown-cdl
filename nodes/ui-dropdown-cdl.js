@@ -19,9 +19,9 @@ module.exports = function (RED) {
                 // does msg.ui_update exist and is an object?
                 if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
                     // array of properties to allow ui_update for.
-                    // We need to include class and enabled even though they are handled automatically, as they must be
+                    // ?? We need to include class and enabled even though they are handled automatically, as they must be
                     // fed to the clients
-                    const propertiesToUpdate = ["options", "enabled", "class"]
+                    const propertiesToUpdate = ["options"] //, "enabled", "class"]
                     // do any pre-processing required of the contents and add to updates
                     for (const [key, value] of Object.entries(msg.ui_update)) {
                         if (propertiesToUpdate.includes(key)) {
@@ -36,19 +36,22 @@ module.exports = function (RED) {
                     }
                 }
                 // also allow class and enabled to set directly via msg.class and msg.enabled
+                /*
                 ["class", "enabled"].forEach((item) => {
                     if (item in msg) {
                         updatesPresent = true
                         updates[item] = msg[item]
                     }
                 })
+                    */
                 // if msg.topic exists then save that as a new property, as need to be able to check if configured
                 // topic is empty, but only do it if msg.payload is present
+                /*
                 if ("topic" in msg  &&  "payload" in msg) {
                     updatesPresent = true
                     updates.topicUpdated = msg.topic
                 }
-
+*/
                 // only store the message in our Node-RED datastore if payload is present, so that
                 // the last selection will get replayed on refresh
                 if ("payload" in msg) {

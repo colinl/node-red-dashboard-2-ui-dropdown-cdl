@@ -1,9 +1,10 @@
 <!-- A dashboard 2 widget
 
+    <div className="ui-dropdown-cdl-wrapper" :class="props.class" >
 -->
 <template>
     <!-- Component must be wrapped in a block so props such as className and style can be passed in from parent -->
-    <div className="ui-dropdown-cdl-wrapper" :class="props.class" >
+    <div className="ui-dropdown-cdl-wrapper" >
         <v-select
             :label="props.label"
 
@@ -20,13 +21,13 @@
 
 <script>
 //import { markRaw } from 'vue'
-//import { mapState } from 'vuex'
+import { mapState } from 'vuex'
 
 const logEvents = false  // whether to log incoming messages and events
 
 export default {
     name: 'UIDropdownCDL',
-    inject: ['$socket'],
+    inject: ['$socket', '$dataTracker'],
     props: {
         /* do not remove entries from this - Dashboard's Layout Manager's will pass this data to your component */
         id: { type: String, required: true },
@@ -34,7 +35,7 @@ export default {
         state: { type: Object, default: () => ({ enabled: false, visible: false }) }
     },
     setup (props) {
-        //console.info('UIDropdownCDL setup with:', props)
+        console.info('UIDropdownCDL setup with:', props)
         //console.debug('Vue function loaded correctly', markRaw)
     },
     data () {
@@ -42,7 +43,7 @@ export default {
             value: "",
             fromManual: false, // indicates that the current state is from a manual click
         }
-    },
+    }, /*
     mounted () {
         this.$socket.on('widget-load:' + this.id, (msg) => {
             if (logEvents) console.log(`On widget-load id: ${this.id}`, msg)
@@ -67,12 +68,13 @@ export default {
         this.$socket.emit('widget-load', this.id)
     },
     unmounted () {
-        /* Make sure, any events you subscribe to on SocketIO are unsubscribed to here */
+        // Make sure, any events you subscribe to on SocketIO are unsubscribed to here 
         this.$socket?.off('widget-load:' + this.id)
         this.$socket?.off('msg-input:' + this.id)
         this.$socket?.off('widget-updates:' + this.id)
-    },
+    }, */
     computed: {
+        ...mapState('data', ['messages']),
         color: function() {
             let answer = ""
             if (this.fromManual) {
@@ -82,24 +84,108 @@ export default {
         },
         options: function() {
             // return the labels from props.options
-            return this.props.options.map((option) => option.label)
-        }
+            return this.expandedOptions().map((option) => option.label)
+            /*
+            console.log(`In options, props: ${JSON.stringify(this.props)}`)
+            return this.getProperty("options").map((option) => {
+                let opt
+                if (typeof option.label === "string" && option.label.length > 0 ) {
+                    opt = option.label
+                } else {
+                    opt = option.value
+                }
+                return opt
+            }) */
+        },
+    },
+    created () {
+        // setup our event handlers, and informs Node-RED that this widget has loaded
+        this.$dataTracker(this.id, this.onInput, this.onLoad, this.onDynamicProperties)
     },
     methods: {
+        /*
+            widget-action just sends a msg to Node-RED, it does not store the msg state server-side
+            alternatively, you can use widget-change, which will also store the msg in the Node's datastore
+        */
+        send (msg) {
+            this.$socket.emit('widget-action', this.id, msg)
+        },
+        /*
+            (optional) Custom onInput function to handle incoming messages from Node-RED
+        */
+        onInput (msg) {
+            // load the latest message from the Node-RED datastore when this widget is loaded
+            // storing it in our vuex store so that we have it saved as we navigate around
+            this.$store.commit('data/bind', {
+                widgetId: this.id,
+                msg
+            })
+            console.log(`In onInput, msg: ${JSON.stringify(msg)}`)
+            if (msg) {
+                this.processMsg(msg)
+            }
+        },
+        /*
+            (optional) Custom onLoad function to handle the loading state of the widget
+            msg   - the latest message from the Node-RED datastore
+            state - The Node-RED config, including any overrides saved to the server-side statestore
+        */
+        onLoad (msg, state) {
+            // loads the last msg received into this node from the Node-RED datastore
+            // state is auto-stored into the widget props, but is available here if you want to do anything else
+            console.log(`In onLoad, msg: ${JSON.stringify(msg)}`)
+            if (msg) {
+                this.processMsg(msg)
+            }
+        },
+        /*
+            (optional) Custom onDynamicProperties function to handle dynamic properties
+            msg - the latest message from the Node-RED datastore
+        */
+        onDynamicProperties (msg) {
+            // handle any dynamic properties that are sent from Node-RED
+            const updates = msg.ui_update
+            if (!updates) {
+                return
+            }
+            if (typeof updates.example !== 'undefined') {
+                // use the globally available "setDynamicProperties" function to store any updates to this property
+                this.setDynamicProperties({ example: updates.example })
+            }
+        },
+        alert (text) {
+            alert(text)
+        },
+        /** 
+         * provides fully expanded options array
+         */
+        expandedOptions() {
+            let options = this.getProperty("options")
+            console.log(`In expandedOptions: ${JSON.stringify(options)}`)
+            options.forEach( (option, index, options) => {
+                    if (typeof option.label != "string" || option.label.length === 0 ) {
+                    option.label = option.value
+                }
+            })
+            console.log(`Leaving expandedOptions: ${JSON.stringify(options)}`)
+            return options
+        },
+
+
         pickupProperties: function() {
             // pickup node properties from this.props and merge with base properties
             const props = this.props
             this.topic = props.topic // pickup topic from properties
             // fill in option labels if not provided
-            props.options.forEach((option) => option.label = option.label.length>0 ? option.label : option.value)
+            //props.options.forEach((option) => option.label = option.label.length>0 ? option.label : option.value)
         },
         processMsg: function(msg) {
             // check whether msg.payload is present and is one of the options
-            if (typeof msg.payload === "string" && this.props.options.find((option) => option.value === msg.payload)) {
+            if (typeof msg.payload === "string" && this.expandedOptions().find((option) => option.value === msg.payload)) {
                 // clear flag indicating that current state is from a manual click
                 this.fromManual = false
-                // string in msg.payload matches a value in this.proc.options, find equivalent label
-                const label = this.props.options.find((option) => option.value === msg.payload)?.label
+                // string in msg.payload matches a value in the options, find equivalent label
+                const label = this.expandedOptions().find((option) => option.value === msg.payload)?.label
                 if (label !== this.value) {
                     this.value = label
                     // set flag to indicate that we have changed it via a message
@@ -113,13 +199,13 @@ export default {
          */
         processUpdates: function(updates) {
             for (const [key, value] of Object.entries(updates)) {
-                this.props[key] = value
+                //this.props[key] = value
             }
         },
     },
     watch: {
         value: function () {
-            //console.log(`In watch value ${JSON.stringify(this.value)}, valueFromMsg: ${this.valueFromMsg}`)
+            console.log(`In watch value ${JSON.stringify(this.value)}, valueFromMsg: ${this.valueFromMsg}`)
             // this.valueFromMsg indicates whether the value change was from a message, in which case we
             // don't need to send a message
             if (this.valueFromMsg) {
@@ -131,7 +217,7 @@ export default {
                 this.fromManual = true
                 let msg1 = {}
                 // return the value for the matching label
-                msg1.payload = this.props.options.find((option) => option.label === this.value)?.value
+                msg1.payload = this.expandedOptions().find((option) => option.label === this.value)?.value
                 // set topic to configured one if not empty, otherwise the topic from last valid message
                 if (this.props.topic && this.props.topic.length > 0) {
                     msg1.topic = this.topic

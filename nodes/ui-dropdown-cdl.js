@@ -25,69 +25,40 @@ module.exports = function (RED) {
             },
             onInput: function (msg, send, done) {
                 //console.log(`onInput msg: ${JSON.stringify(msg)}`)
-                let updates = {} // this will be a set of properties to be merged into the state store here and props in the
-                let updatesPresent = false // whether there are any updates
                 // does msg.ui_update exist and is an object?
                 if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
                     // array of properties to allow ui_update for.
-                    // ?? We need to include class and enabled even though they are handled automatically, as they must be
-                    // fed to the clients
-                    const propertiesToUpdate = ["options"] //, "enabled", "class"]
+                    const propertiesToUpdate = ["options"]
                     // do any pre-processing required of the contents and add to updates
                     for (const [key, value] of Object.entries(msg.ui_update)) {
                         if (propertiesToUpdate.includes(key)) {
                             // handle any properties that need massaging
                             const val = handleSpecialProperty(key, value)
-                            if (value != null) {    // is this right ????????????????????/
-                                // null means that there is a problem with the data so ignore it.
-                                updatesPresent = true
-                                updates[key] = val
+                            if (value != null) {
                                 msg.ui_update[key] = val
+                            } else {
+                                // null means that there is a problem with the data so ignore it.
+                                delete msg.ui_update[key]
                             }
+                        } else {
+                            // this property is not updateable, so remove it from ui_update
+                            delete msg.ui_update[key]
                         }
                     }
                 }
-                // also allow class and enabled to set directly via msg.class and msg.enabled
-                /*
-                ["class", "enabled"].forEach((item) => {
-                    if (item in msg) {
-                        updatesPresent = true
-                        updates[item] = msg[item]
-                    }
-                })*/
                 // if msg.topic exists, a payload is present, and the configured topic is empty then set msg.ui_update.topic
                 // so it will be saved
                 if ("topic" in msg  &&  "payload" in msg && config.topic.length == 0) {
-                    updatesPresent = true
-                    updates.topic = msg.topic
                     msg.ui_update ||= {}
                     msg.ui_update.topic = msg.topic
                 }
 
-                // if msg.topic exists then save that as a new property, as need to be able to check if configured
-                // topic is empty, but only do it if msg.payload is present
-                /*
-                if ("topic" in msg  &&  "payload" in msg) {
-                    updatesPresent = true
-                    updates.topicUpdated = msg.topic
-                }
-*/
                 // only store the message in our Node-RED datastore if payload is present, so that
                 // the last selection will get replayed on refresh
                 if ("payload" in msg) {
                     base.stores.data.save(base, node, msg)
                 }
 
-                // if we have any updates, save them in the state store then send to clients
-                if (updatesPresent) {
-                    const statestore = base.stores.state
-                    // there are updates, so update state store
-                    for (const [key, value] of Object.entries(updates)) {
-                        statestore.set(base, node, msg, key, value)
-                    }
-                    //console.log(`sending updates to widget-updates:${node.id}`)
-                    base.emit('widget-updates:' + node.id, {_updates: updates}, node)
-                }
                 // don't call send(msg) as we don't want to pass the message on to connected nodes
                 //if (props.passthrough) send(msg)
                 return

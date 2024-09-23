@@ -12,6 +12,17 @@ module.exports = function (RED) {
         // server-side event handlers
         const evts = {
             onAction: true,
+            beforeSend: function (msg) { /*
+                // check for any dynamic properties being set
+                const updates = msg.ui_update
+                if (updates) {
+                    if (typeof updates.example !== 'undefined') {
+                        // save the "example" property in the Node-RED statestore
+                        base.stores.state.set(base, node, msg, 'example', updates.example)
+                    }
+                } */
+                return msg
+            },
             onInput: function (msg, send, done) {
                 //console.log(`onInput msg: ${JSON.stringify(msg)}`)
                 let updates = {} // this will be a set of properties to be merged into the state store here and props in the
@@ -43,8 +54,16 @@ module.exports = function (RED) {
                         updatesPresent = true
                         updates[item] = msg[item]
                     }
-                })
-                    */
+                })*/
+                // if msg.topic exists, a payload is present, and the configured topic is empty then set msg.ui_update.topic
+                // so it will be saved
+                if ("topic" in msg  &&  "payload" in msg && config.topic.length == 0) {
+                    updatesPresent = true
+                    updates.topic = msg.topic
+                    msg.ui_update ||= {}
+                    msg.ui_update.topic = msg.topic
+                }
+
                 // if msg.topic exists then save that as a new property, as need to be able to check if configured
                 // topic is empty, but only do it if msg.payload is present
                 /*

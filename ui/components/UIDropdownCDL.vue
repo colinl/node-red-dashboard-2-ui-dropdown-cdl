@@ -149,11 +149,16 @@ export default {
             if (!updates) {
                 return
             }
-            if (typeof updates.options !== 'undefined') {
-                // use the globally available "setDynamicProperties" function to store any updates to this property
-                this.setDynamicProperties({ options: updates.options })
-            }
-            console.log(`leaving onDynamicProperties, options: ${JSON.stringify(this.getProperty("options"))}`)
+            const updateableProperties = ["options", "topic"]
+            updateableProperties.forEach( property => {
+                if (typeof updates[property] !== 'undefined') {
+                    // use the globally available "setDynamicProperties" function to store any updates to this property
+                    let prop = {}
+                    prop[property] = updates[property]
+                    this.setDynamicProperties(prop)
+                }
+            })
+            console.log(`leaving onDynamicProperties, options: ${JSON.stringify(this.getProperty("options"))}, topic: ${JSON.stringify(this.getProperty("topic"))}`)
         },
         alert (text) {
             alert(text)
@@ -163,13 +168,11 @@ export default {
          */
         expandedOptions() {
             let options = this.getProperty("options")
-            console.log(`In expandedOptions: ${JSON.stringify(options)}`)
             options.forEach( (option, index, options) => {
                     if (typeof option.label != "string" || option.label.length === 0 ) {
                     option.label = option.value
                 }
             })
-            console.log(`Leaving expandedOptions: ${JSON.stringify(options)}`)
             return options
         },
 
@@ -221,11 +224,14 @@ export default {
                 // return the value for the matching label
                 msg1.payload = this.expandedOptions().find((option) => option.label === this.value)?.value
                 // set topic to configured one if not empty, otherwise the topic from last valid message
+                msg1.topic = this.getProperty("topic")
+                /*
                 if (this.props.topic && this.props.topic.length > 0) {
                     msg1.topic = this.topic
                 } else {
                     msg1.topic = this.props.topicUpdated
                 }
+                    */
                 // if required send a message to a custom event in the server to update the state store, for example
                 /*
                 const data = {id: this.id, timestamp: new Date().toISOString()}

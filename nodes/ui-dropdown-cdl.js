@@ -13,23 +13,8 @@ module.exports = function (RED) {
         const evts = {
             onAction: true,
             beforeSend: function (msg) {
-                console.log(`beforeSend msg: ${JSON.stringify(msg)}`)
-                console.log(`options in state store: ${JSON.stringify(base.stores.state.getProperty(node.id, "options"))}`)
+                //console.log(`beforeSend msg: ${JSON.stringify(msg)}`)
                 // check for any dynamic properties being set
-
-
-                /*
-                const updates = msg.ui_update
-                if (updates) {
-                    if (typeof updates.example !== 'undefined') {
-                        // save the "example" property in the Node-RED statestore
-                        base.stores.state.set(base, node, msg, 'example', updates.example)
-                    }
-                } */
-                return msg
-            },
-            onInput: function (msg, send, done) {
-                console.log(`onInput msg: ${JSON.stringify(msg)}`)
                 // does msg.ui_update exist and is an object?
                 if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
                     // array of properties to allow ui_update for.
@@ -67,6 +52,10 @@ module.exports = function (RED) {
                         base.stores.state.set(base, node, msg, key, value)
                     }
                 }
+                return msg
+            },
+            onInput: function (msg, send, done) {
+                //console.log(`onInput msg: ${JSON.stringify(msg)}`)
 
                 // only store the message in our Node-RED datastore if payload is present, so that
                 // the last selection will get replayed on refresh

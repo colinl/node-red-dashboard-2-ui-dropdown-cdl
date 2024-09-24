@@ -11,7 +11,7 @@
             hide-details
             :items="options"
             :bg-color="color"
-            :disabled="!props.enabled"
+            :disabled="!getProperty(`enabled`)"
             >
         </v-select>
     </div>

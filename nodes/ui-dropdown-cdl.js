@@ -12,8 +12,13 @@ module.exports = function (RED) {
         // server-side event handlers
         const evts = {
             onAction: true,
-            beforeSend: function (msg) { /*
+            beforeSend: function (msg) {
+                console.log(`beforeSend msg: ${JSON.stringify(msg)}`)
+                console.log(`options in state store: ${JSON.stringify(base.stores.state.getProperty(node.id, "options"))}`)
                 // check for any dynamic properties being set
+
+
+                /*
                 const updates = msg.ui_update
                 if (updates) {
                     if (typeof updates.example !== 'undefined') {
@@ -24,7 +29,7 @@ module.exports = function (RED) {
                 return msg
             },
             onInput: function (msg, send, done) {
-                //console.log(`onInput msg: ${JSON.stringify(msg)}`)
+                console.log(`onInput msg: ${JSON.stringify(msg)}`)
                 // does msg.ui_update exist and is an object?
                 if (typeof msg.ui_update === 'object' && !Array.isArray(msg.ui_update) && msg.ui_update !== null) {
                     // array of properties to allow ui_update for.
@@ -45,12 +50,22 @@ module.exports = function (RED) {
                             delete msg.ui_update[key]
                         }
                     }
+                } else {
+                    // invalid ui_update so delete it
+                    delete msg.ui_update
                 }
                 // if msg.topic exists, a payload is present, and the configured topic is empty then set msg.ui_update.topic
                 // so it will be saved
                 if ("topic" in msg  &&  "payload" in msg && config.topic.length == 0) {
                     msg.ui_update ||= {}
                     msg.ui_update.topic = msg.topic
+                }
+
+                // update state store with values from msg.ui_update
+                if (msg.ui_update) {
+                    for (const [key, value] of Object.entries(msg.ui_update)) {
+                        base.stores.state.set(base, node, msg, key, value)
+                    }
                 }
 
                 // only store the message in our Node-RED datastore if payload is present, so that

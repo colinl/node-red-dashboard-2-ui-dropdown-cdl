@@ -32,7 +32,7 @@ export default {
         state: { type: Object, default: () => ({ enabled: false, visible: false }) }
     },
     setup (props) {
-        console.info('UIDropdownCDL setup with:', props)
+        //console.info('UIDropdownCDL setup with:', props)
     },
     data () {
         return {
